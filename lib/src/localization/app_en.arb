@@ -1,0 +1,6 @@
+{
+  "appTitle": "count_me_in",
+  "@appTitle": {
+    "description": "The title of the application"
+  }
+}
