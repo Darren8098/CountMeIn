@@ -1,6 +1,6 @@
 {
-  "dart.flutterRunAdditionalArgs": [ "--no-enable-impeller" ],
+  "dart.flutterRunAdditionalArgs": ["--no-enable-impeller"],
   "editor.codeActionsOnSave": {
-    "quickfix.insertSemicolon": true,
-  },
+    "quickfix.insertSemicolon": "explicit"
+  }
 }

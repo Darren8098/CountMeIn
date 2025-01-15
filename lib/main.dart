@@ -1,8 +1,37 @@
-import 'package:count_me_in/src/auth/login_page.dart';
-import 'package:flutter/material.dart';
+import 'dart:developer' as dev;
 
-void main() {
-  runApp(const MyApp());
+import 'package:count_me_in/src/auth/login_page.dart';
+import 'package:count_me_in/src/playback/audio_controller.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
+import 'package:provider/provider.dart';
+
+void main() async {
+  Logger.root.level = kDebugMode ? Level.FINE : Level.INFO;
+  Logger.root.onRecord.listen((record) {
+    dev.log(
+      record.message,
+      time: record.time,
+      level: record.level.value,
+      name: record.loggerName,
+      zone: record.zone,
+      error: record.error,
+      stackTrace: record.stackTrace,
+    );
+  });
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // final audioController = ;
+  // await audioController.initialize();
+
+  final audioController = AudioController();
+  await audioController.initialize();
+
+  runApp(MultiProvider(providers: [
+    Provider(create: (_) => audioController),
+  ], child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {

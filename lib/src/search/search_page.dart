@@ -1,8 +1,9 @@
 import 'dart:convert';
 
-import 'package:count_me_in/src/track/track_detail_page.dart';
+import 'package:count_me_in/src/playback/playback_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class SearchPage extends StatefulWidget {
   final String accessToken;
@@ -82,10 +83,9 @@ class _SearchPageState extends State<SearchPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => TrackDetailPage(
-                            accessToken: widget.accessToken,
-                            trackId: track['id'],
-                          ),
+                          builder: (_) => BpmSettingPage(
+                              trackName: track['name'],
+                              audioController: context.read()),
                         ),
                       );
                     },

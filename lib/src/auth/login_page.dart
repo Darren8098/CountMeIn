@@ -1,7 +1,7 @@
 import 'package:count_me_in/src/search/search_page.dart';
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-
+ 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -20,7 +20,6 @@ class _LoginPageState extends State<LoginPage> {
 
     final token = await _authService.authenticate();
 
-    print("TOKEN: ${token}");
     setState(() {
       _isLoading = false;
     });
