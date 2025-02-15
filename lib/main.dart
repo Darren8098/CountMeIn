@@ -23,11 +23,7 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  // final audioController = ;
-  // await audioController.initialize();
-
   final audioController = AudioController();
-  await audioController.initialize();
 
   runApp(MultiProvider(providers: [
     Provider(create: (_) => audioController),

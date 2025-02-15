@@ -1,23 +1,44 @@
+import 'dart:async';
+
 import 'package:count_me_in/src/playback/audio_controller.dart';
 import 'package:flutter/material.dart';
 
 class BpmSettingPage extends StatefulWidget {
   final String trackName;
+  final String trackId;
+  final AudioController audioController;
+
+  const BpmSettingPage({
+    super.key,
+    required this.trackName,
+    required this.trackId,
+    required this.audioController,
+  });
 
   @override
   State<BpmSettingPage> createState() => _BpmSettingPageState();
-
-  const BpmSettingPage(
-      {super.key, required this.trackName, required this.audioController});
-
-  final AudioController audioController;
 }
 
 class _BpmSettingPageState extends State<BpmSettingPage> {
   double _bpm = 120;
   bool _isPlaying = false;
+  bool _isCounting = false;
   int _currentBeat = 0;
-  static const int _totalBeats = 4; // Standard 4-beat count-in
+  static const int _totalBeats = 4;
+  Timer? _progressTimer;
+
+  @override
+  void dispose() {
+    _progressTimer?.cancel();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +66,7 @@ class _BpmSettingPageState extends State<BpmSettingPage> {
               max: 240,
               divisions: 200,
               label: _bpm.round().toString(),
-              onChanged: _isPlaying
+              onChanged: _isPlaying || _isCounting
                   ? null
                   : (double value) {
                       setState(() {
@@ -54,7 +75,7 @@ class _BpmSettingPageState extends State<BpmSettingPage> {
                     },
             ),
             const SizedBox(height: 30),
-            if (_isPlaying)
+            if (_isCounting)
               Column(
                 children: [
                   Text(
@@ -65,7 +86,50 @@ class _BpmSettingPageState extends State<BpmSettingPage> {
                   CircularProgressIndicator(),
                 ],
               ),
-            if (!_isPlaying)
+            if (_isPlaying)
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_formatDuration(
+                          widget.audioController.currentPosition)),
+                      Expanded(
+                        child: Slider(
+                          value: widget
+                              .audioController.currentPosition.inMilliseconds
+                              .toDouble(),
+                          min: 0,
+                          max: widget
+                              .audioController.totalDuration.inMilliseconds
+                              .toDouble(),
+                          onChanged: null,
+                        ),
+                      ),
+                      Text(_formatDuration(
+                          widget.audioController.totalDuration)),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: Icon(widget.audioController.isPlaying
+                            ? Icons.pause
+                            : Icons.play_arrow),
+                        onPressed: () {
+                          if (widget.audioController.isPlaying) {
+                            widget.audioController.pauseMusic();
+                          } else {
+                            widget.audioController.resumeMusic();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            if (!_isPlaying && !_isCounting)
               ElevatedButton(
                 onPressed: _playCountIn,
                 child: const Text('Count me in'),
@@ -77,10 +141,10 @@ class _BpmSettingPageState extends State<BpmSettingPage> {
   }
 
   Future<void> _playCountIn() async {
-    if (_isPlaying) return;
+    if (_isCounting) return;
 
     setState(() {
-      _isPlaying = true;
+      _isCounting = true;
       _currentBeat = 0;
     });
 
@@ -97,14 +161,20 @@ class _BpmSettingPageState extends State<BpmSettingPage> {
         await Future.delayed(beepDelay);
       }
 
-      // TODO: Start playing the actual track here
+      // Start the track on the next beat
+      await Future.delayed(beepDelay);
+      await widget.audioController.startMusic(widget.trackId);
+
+      setState(() {
+        _isCounting = false;
+        _isPlaying = true;
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to play audio: $e')),
       );
-    } finally {
       setState(() {
-        _isPlaying = false;
+        _isCounting = false;
         _currentBeat = 0;
       });
     }

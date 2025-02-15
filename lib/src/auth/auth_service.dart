@@ -7,7 +7,8 @@ const String clientId = '{CLIENT_ID}';
 const String clientSecret = '{CLIENT_SECRET}';
 const String redirectUri = 'countmein://callback';
 
-final String scopes = 'user-read-private';
+final String scopes =
+    'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing';
 
 String _buildAuthUrl() {
   // TODO add state parameter

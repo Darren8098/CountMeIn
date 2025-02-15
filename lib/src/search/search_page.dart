@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:count_me_in/src/playback/audio_controller.dart';
 import 'package:count_me_in/src/playback/playback_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -80,12 +81,16 @@ class _SearchPageState extends State<SearchPage> {
                     title: Text(track['name']),
                     subtitle: Text(track['artist']),
                     onTap: () {
+                      final audioController = context.read<AudioController>();
+                      audioController.setAccessToken(widget.accessToken);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => BpmSettingPage(
-                              trackName: track['name'],
-                              audioController: context.read()),
+                            trackName: track['name'],
+                            trackId: track['id'],
+                            audioController: audioController,
+                          ),
                         ),
                       );
                     },
