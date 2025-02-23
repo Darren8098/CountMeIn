@@ -10,9 +10,9 @@ const String redirectUri = 'countmein://callback';
 final String scopes =
     'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing';
 
-String _buildAuthUrl() {
+String _buildAuthUrl(String baseUrl) {
   // TODO add state parameter
-  return Uri.https('accounts.spotify.com', '/authorize', {
+  return Uri.https(baseUrl, '/authorize', {
     'client_id': clientId,
     'response_type': 'code',
     'redirect_uri': redirectUri,
@@ -22,9 +22,13 @@ String _buildAuthUrl() {
 }
 
 class AuthService {
+  final String baseUrl;
+
+  AuthService(this.baseUrl);
+
   Future<String?> authenticate() async {
     try {
-      final authUrl = _buildAuthUrl();
+      final authUrl = _buildAuthUrl(baseUrl);
 
       // Open the browser for user login
       final result = await FlutterWebAuth2.authenticate(
@@ -50,7 +54,7 @@ class AuthService {
   }
 
   Future<String?> _getAccessToken(String code) async {
-    final uri = Uri.parse('https://accounts.spotify.com/api/token');
+    final uri = Uri.parse('https://$baseUrl/api/token');
 
     final response = await http.post(uri, headers: {
       'Content-Type': 'application/x-www-form-urlencoded',

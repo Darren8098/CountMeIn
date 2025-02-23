@@ -8,8 +8,9 @@ import 'package:provider/provider.dart';
 
 class SearchPage extends StatefulWidget {
   final String accessToken;
+  final String baseUrl;
 
-  const SearchPage({super.key, required this.accessToken});
+  const SearchPage({super.key, required this.accessToken, required this.baseUrl});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -20,7 +21,7 @@ class _SearchPageState extends State<SearchPage> {
   List<Map<String, dynamic>> _trackResults = [];
 
   Future<void> _searchTracks(String query) async {
-    final url = Uri.https('api.spotify.com', '/v1/search', {
+    final url = Uri.https(widget.baseUrl, '/v1/search', {
       'q': query,
       'type': 'track',
       'limit': '10',

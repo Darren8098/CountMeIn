@@ -8,6 +8,8 @@ import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+  const String spotifyApiBaseUrl = 'https://api.spotify.com/v1';
+  
   Logger.root.level = kDebugMode ? Level.FINE : Level.INFO;
   Logger.root.onRecord.listen((record) {
     dev.log(
@@ -21,9 +23,10 @@ void main() async {
     );
   });
 
+
   WidgetsFlutterBinding.ensureInitialized();
 
-  final audioController = AudioController();
+  final audioController = AudioController(spotifyApiBaseUrl);
 
   runApp(MultiProvider(providers: [
     Provider(create: (_) => audioController),

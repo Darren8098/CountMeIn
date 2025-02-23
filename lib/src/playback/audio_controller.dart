@@ -7,7 +7,10 @@ import 'package:logging/logging.dart';
 
 class AudioController {
   static final Logger _log = Logger('AudioController');
-  static const String _baseUrl = 'https://api.spotify.com/v1';
+
+  final String baseUrl;
+
+  AudioController(this.baseUrl);
 
   SoLoud? _soloud;
   bool _isInitialized = false;
@@ -42,7 +45,7 @@ class AudioController {
     }
 
     final response = await http.get(
-      Uri.parse('$_baseUrl/me/player/devices'),
+      Uri.parse('$baseUrl/me/player/devices'),
       headers: {'Authorization': 'Bearer $_accessToken'},
     );
 
@@ -73,7 +76,7 @@ class AudioController {
     try {
       final response = await http.put(
         Uri.parse(
-            '$_baseUrl/me/player/play${_deviceId != null ? '?device_id=$_deviceId' : ''}'),
+            '$baseUrl/me/player/play${_deviceId != null ? '?device_id=$_deviceId' : ''}'),
         headers: {
           'Authorization': 'Bearer $_accessToken',
           'Content-Type': 'application/json',
@@ -112,7 +115,7 @@ class AudioController {
 
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/me/player/pause'),
+        Uri.parse('$baseUrl/me/player/pause'),
         headers: {'Authorization': 'Bearer $_accessToken'},
       );
 
@@ -135,7 +138,7 @@ class AudioController {
 
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/me/player/play'),
+        Uri.parse('$baseUrl/me/player/play'),
         headers: {'Authorization': 'Bearer $_accessToken'},
       );
 
@@ -147,7 +150,7 @@ class AudioController {
         throw Exception('Failed to resume playback: ${response.statusCode}');
       }
     } catch (e) {
-      _log.warning('Failed to resume music', e);
+      _log.warning('Failed to resume music ${e.toString()}', e);
       rethrow;
     }
   }
@@ -169,7 +172,7 @@ class AudioController {
   Future<void> _updatePlaybackState() async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/me/player'),
+        Uri.parse('$baseUrl/me/player'),
         headers: {'Authorization': 'Bearer $_accessToken'},
       );
 

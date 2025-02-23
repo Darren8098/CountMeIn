@@ -12,7 +12,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService("accounts.spotify.com");
   bool _isLoading = false;
 
   Future<void> _handleLogin() async {
@@ -24,7 +24,8 @@ class _LoginPageState extends State<LoginPage> {
 
     if (token != null) {
       // Initialize audio controller with the token
-      final audioController = Provider.of<AudioController>(context, listen: false);
+      final audioController =
+          Provider.of<AudioController>(context, listen: false);
       audioController.setAccessToken(token);
       await audioController.initialize();
 
@@ -33,7 +34,8 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => SearchPage(accessToken: token),
+            builder: (_) =>
+                SearchPage(accessToken: token, baseUrl: 'api.spotify.com'),
           ),
         );
       }
