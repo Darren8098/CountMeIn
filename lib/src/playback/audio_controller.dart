@@ -4,13 +4,22 @@ import 'dart:convert';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+import 'package:count_me_in/src/recording/recording_controller.dart';
+import 'package:count_me_in/src/recording/recording_service.dart';
 
 class AudioController {
   static final Logger _log = Logger('AudioController');
 
   final String baseUrl;
+  final RecordingController _recordingController;
+  final RecordingService _recordingService;
+  String? _currentTrackName;
 
-  AudioController(this.baseUrl);
+  AudioController(
+    this.baseUrl, {
+    required RecordingService recordingService,
+  })  : _recordingController = RecordingController(),
+        _recordingService = recordingService;
 
   SoLoud? _soloud;
   bool _isInitialized = false;
@@ -31,6 +40,7 @@ class AudioController {
       _soloud = SoLoud.instance;
       await _soloud!.init();
       await _getAvailableDevices();
+      await _recordingService.initialize();
       _isInitialized = true;
       _log.info('Audio system initialized successfully');
     } catch (e) {
@@ -83,9 +93,13 @@ class AudioController {
       if (trackResponse.statusCode == 200) {
         final trackData = jsonDecode(trackResponse.body);
         _totalDuration = Duration(milliseconds: trackData['duration_ms']);
+        _currentTrackName = trackData['name'];
       } else {
-        _log.warning('Failed to get track duration: ${trackResponse.statusCode}');
+        _log.warning('Failed to get track metadata: ${trackResponse.statusCode}, "${trackResponse.body}"');
       }
+
+      // Start recording before playing the track
+      await _recordingController.startRecording(trackId);
 
       final response = await http.put(
         Uri.parse(
@@ -136,6 +150,19 @@ class AudioController {
       if (response.statusCode == 200) {
         _isPlaying = false;
         _stopPositionTimer();
+
+        // Stop recording and save metadata
+        if (_recordingController.isRecording) {
+          final recordingPath = await _recordingController.stopRecording();
+          if (recordingPath != null && _currentTrackId != null && _currentTrackName != null) {
+            await _recordingService.addRecording(
+              filePath: recordingPath,
+              trackId: _currentTrackId!,
+              trackName: _currentTrackName!,
+            );
+          }
+        }
+
         _log.info('Paused music playback');
       } else {
         throw Exception(
@@ -161,7 +188,8 @@ class AudioController {
         _startPositionTimer();
         _log.info('Resumed music playback');
       } else {
-        throw Exception('Failed to resume playback: ${response.statusCode}, "${response.body}"');
+        throw Exception(
+            'Failed to resume playback: ${response.statusCode}, "${response.body}"');
       }
     } catch (e) {
       _log.warning('Failed to resume music ${e.toString()}', e);
@@ -226,14 +254,14 @@ class AudioController {
     }
   }
 
-  void dispose() {
+  Future<void> dispose() async {
     _stopPositionTimer();
-    try {
-      _soloud?.deinit();
-      _isInitialized = false;
-      _log.info('Audio system disposed');
-    } catch (e) {
-      _log.warning('Error disposing audio system', e);
+    await _recordingController.dispose();
+    if (_soloud != null) {
+      _soloud!.deinit();
+      _soloud = null;
     }
+    _isInitialized = false;
+    _log.info('Audio system disposed');
   }
 }

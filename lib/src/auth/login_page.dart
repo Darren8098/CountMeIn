@@ -3,6 +3,7 @@ import 'package:count_me_in/src/playback/audio_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'auth_service.dart';
+import 'package:count_me_in/src/navigation/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -29,13 +30,15 @@ class _LoginPageState extends State<LoginPage> {
       audioController.setAccessToken(token);
       await audioController.initialize();
 
-      // Navigate to search page
+      // Navigate to home page
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                SearchPage(accessToken: token, baseUrl: 'api.spotify.com'),
+            builder: (_) => HomePage(
+              accessToken: token,
+              baseUrl: 'https://api.spotify.com/v1',
+            ),
           ),
         );
       }
