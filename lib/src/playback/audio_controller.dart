@@ -34,6 +34,7 @@ class AudioController {
   bool get isPlaying => _isPlaying;
   Duration get currentPosition => _currentPosition;
   Duration get totalDuration => _totalDuration;
+  RecordingController get recordingController => _recordingController;
 
   Future<void> initialize() async {
     try {
@@ -250,6 +251,35 @@ class AudioController {
       _log.fine('Playing sound: $assetKey');
     } catch (e) {
       _log.warning('Failed to play sound: $assetKey', e);
+      rethrow;
+    }
+  }
+
+  Future<void> startRecording(String trackId) async {
+    try {
+      await _recordingController.startRecording(trackId);
+      _log.info('Started recording');
+    } catch (e) {
+      _log.severe('Failed to start recording', e);
+      rethrow;
+    }
+  }
+
+  Future<bool> stopRecording() async {
+    try {
+      final recordingPath = await _recordingController.stopRecording();
+      if (recordingPath != null && _currentTrackName != null) {
+        await _recordingService.addRecording(
+          filePath: recordingPath,
+          trackId: recordingPath.split('-').first.split('/').last,
+          trackName: _currentTrackName!,
+        );
+        _log.info('Stopped recording');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _log.severe('Failed to stop recording', e);
       rethrow;
     }
   }

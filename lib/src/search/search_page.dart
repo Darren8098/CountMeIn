@@ -1,7 +1,7 @@
 import 'dart:convert';
 
+import 'package:count_me_in/src/playback/recording_page.dart';
 import 'package:count_me_in/src/playback/audio_controller.dart';
-import 'package:count_me_in/src/playback/playback_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -22,7 +22,8 @@ class _SearchPageState extends State<SearchPage> {
   List<Map<String, dynamic>> _trackResults = [];
 
   Future<void> _searchTracks(String query) async {
-    final url = Uri.parse('${widget.baseUrl}/search?q=$query&type=track&limit=10');
+    final url =
+        Uri.parse('${widget.baseUrl}/search?q=$query&type=track&limit=10');
 
     final response = await http.get(
       url,
@@ -84,7 +85,7 @@ class _SearchPageState extends State<SearchPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => BpmSettingPage(
+                          builder: (_) => RecordingPage(
                             trackName: track['name'],
                             trackId: track['id'],
                             audioController: audioController,

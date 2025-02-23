@@ -2,12 +2,9 @@ import 'dart:developer' as dev;
 
 import 'package:count_me_in/src/auth/login_page.dart';
 import 'package:count_me_in/src/playback/audio_controller.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
-import 'package:count_me_in/src/auth/auth_service.dart';
-import 'package:count_me_in/src/navigation/home_page.dart';
 import 'package:count_me_in/src/recording/recording_service.dart';
 
 void main() async {

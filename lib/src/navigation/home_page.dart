@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:count_me_in/src/search/search_page.dart';
+import 'package:count_me_in/src/playback/search_and_playback_page.dart';
 import 'package:count_me_in/src/recording/recordings_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> widgetOptions = <Widget>[
-      SearchPage(
+      SearchAndPlaybackPage(
         accessToken: widget.accessToken,
         baseUrl: widget.baseUrl,
       ),
@@ -43,11 +43,11 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
+            icon: Icon(Icons.music_note),
+            label: 'Play',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.music_note),
+            icon: Icon(Icons.mic),
             label: 'Recordings',
           ),
         ],
