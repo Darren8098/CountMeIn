@@ -74,6 +74,19 @@ class AudioController {
     }
 
     try {
+      // First get the track metadata to get its duration
+      final trackResponse = await http.get(
+        Uri.parse('$baseUrl/tracks/$trackId'),
+        headers: {'Authorization': 'Bearer $_accessToken'},
+      );
+
+      if (trackResponse.statusCode == 200) {
+        final trackData = jsonDecode(trackResponse.body);
+        _totalDuration = Duration(milliseconds: trackData['duration_ms']);
+      } else {
+        _log.warning('Failed to get track duration: ${trackResponse.statusCode}');
+      }
+
       final response = await http.put(
         Uri.parse(
             '$baseUrl/me/player/play${_deviceId != null ? '?device_id=$_deviceId' : ''}'),
@@ -89,6 +102,7 @@ class AudioController {
 
       if (response.statusCode == 204) {
         _currentTrackId = trackId;
+        _currentPosition = startAt ?? Duration.zero;
         _isPlaying = true;
         _startPositionTimer();
         _log.info('Started music playback for track: $trackId');
@@ -147,7 +161,7 @@ class AudioController {
         _startPositionTimer();
         _log.info('Resumed music playback');
       } else {
-        throw Exception('Failed to resume playback: ${response.statusCode}');
+        throw Exception('Failed to resume playback: ${response.statusCode}, "${response.body}"');
       }
     } catch (e) {
       _log.warning('Failed to resume music ${e.toString()}', e);
@@ -160,7 +174,15 @@ class AudioController {
   void _startPositionTimer() {
     _positionTimer?.cancel();
     _positionTimer = Timer.periodic(Duration(seconds: 1), (_) {
-      _updatePlaybackState();
+      // Update position locally every second
+      if (_isPlaying) {
+        _currentPosition += Duration(seconds: 1);
+      }
+
+      // Sync with Spotify every 10 seconds
+      if (_currentPosition.inSeconds % 10 == 0) {
+        _updatePlaybackState();
+      }
     });
   }
 

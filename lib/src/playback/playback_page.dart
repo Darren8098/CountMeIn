@@ -26,6 +26,20 @@ class _BpmSettingPageState extends State<BpmSettingPage> {
   int _currentBeat = 0;
   static const int _totalBeats = 4;
   Timer? _progressTimer;
+  Duration _position = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _position = widget.audioController.currentPosition;
+    _progressTimer = Timer.periodic(Duration(milliseconds: 500), (_) {
+      if (mounted) {
+        setState(() {
+          _position = widget.audioController.currentPosition;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -92,19 +106,20 @@ class _BpmSettingPageState extends State<BpmSettingPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(_formatDuration(
-                          widget.audioController.currentPosition)),
+                      Text(_formatDuration(_position)),
                       Expanded(
-                        child: Slider(
-                          value: widget
-                              .audioController.currentPosition.inMilliseconds
-                              .toDouble(),
-                          min: 0,
-                          max: widget
-                              .audioController.totalDuration.inMilliseconds
-                              .toDouble(),
-                          onChanged: null,
-                        ),
+                        child: widget.audioController.totalDuration.inSeconds > 0
+                            ? Slider(
+                                value: _position.inSeconds.toDouble(),
+                                min: 0,
+                                max: widget
+                                    .audioController.totalDuration.inSeconds
+                                    .toDouble(),
+                                onChanged: null,
+                              )
+                            : const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                       ),
                       Text(_formatDuration(
                           widget.audioController.totalDuration)),
