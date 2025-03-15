@@ -10,6 +10,7 @@ import 'package:count_me_in/src/recording/recordings_repository.dart';
 
 void main() async {
   const String spotifyApiBaseUrl = 'https://api.spotify.com/v1';
+  const String spotifyAuthBaseUrl = 'accounts.spotify.com';
 
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) {
@@ -41,7 +42,8 @@ void main() async {
         ChangeNotifierProvider<RecordingsRepository>.value(
             value: recordingRepository),
         Provider<SpotifyClient>(
-            create: (_) => SpotifyClient(spotifyApiBaseUrl)),
+            create: (_) =>
+                SpotifyClient(spotifyApiBaseUrl, spotifyAuthBaseUrl)),
         ProxyProvider<SpotifyClient, AudioController>(
           update: (context, spotifyClient, __) => AudioController(
               recordingService: context.read<RecordingsRepository>(),
