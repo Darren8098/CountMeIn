@@ -1,7 +1,7 @@
 import 'package:count_me_in/src/playback/audio_controller.dart';
+import 'package:count_me_in/src/playback/spotify_client.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'auth_service.dart';
 import 'package:count_me_in/src/navigation/home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -12,7 +12,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final AuthService _authService = AuthService("accounts.spotify.com");
   bool _isLoading = false;
 
   Future<void> _handleLogin() async {
@@ -20,13 +19,13 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final token = await _authService.authenticate();
+    final spotifyClient = Provider.of<SpotifyClient>(context, listen: false);
+    final success = await spotifyClient.authenticate();
 
-    if (token != null) {
-      // Initialize audio controller with the token
+    if (success) {
+      // TODO this isn't needed here
       final audioController =
           Provider.of<AudioController>(context, listen: false);
-      audioController.setAccessToken(token);
       await audioController.initialize();
 
       // Navigate to home page
@@ -34,10 +33,7 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => HomePage(
-              accessToken: token,
-              baseUrl: 'https://api.spotify.com/v1',
-            ),
+            builder: (_) => HomePage(),
           ),
         );
       }

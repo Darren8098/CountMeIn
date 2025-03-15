@@ -1,19 +1,13 @@
 import 'dart:async';
+import 'package:count_me_in/src/playback/spotify_client.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:count_me_in/src/playback/audio_controller.dart';
 import 'package:count_me_in/src/playback/recording_page.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class SearchAndPlaybackPage extends StatefulWidget {
-  final String accessToken;
-  final String baseUrl;
-
   const SearchAndPlaybackPage({
     super.key,
-    required this.accessToken,
-    required this.baseUrl,
   });
 
   @override
@@ -56,36 +50,19 @@ class _SearchAndPlaybackPageState extends State<SearchAndPlaybackPage> {
   }
 
   Future<void> _performSearch(String query) async {
-    if (query.isEmpty) return;
+    if (query.trim().isEmpty) return;
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('${widget.baseUrl}/search?q=$query&type=track&limit=5'),
-        headers: {'Authorization': 'Bearer ${widget.accessToken}'},
-      );
+      final spotifyClient = Provider.of<SpotifyClient>(context, listen: false);
+      final results = await spotifyClient.searchTracks(query, limit: 5);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          _searchResults = List<Map<String, dynamic>>.from(
-              data['tracks']['items'].map((item) => {
-                    'id': item['id'],
-                    'name': item['name'],
-                    'artist': item['artists'][0]['name'],
-                    'albumArt': item['album']['images'].isNotEmpty
-                        ? item['album']['images'][0]['url']
-                        : null,
-                  }));
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Search failed: ${response.statusCode}')),
-        );
-      }
+      setState(() {
+        _searchResults = results;
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Search failed: $e')),

@@ -3,13 +3,8 @@ import 'package:count_me_in/src/playback/search_and_playback_page.dart';
 import 'package:count_me_in/src/recording/recordings_page.dart';
 
 class HomePage extends StatefulWidget {
-  final String accessToken;
-  final String baseUrl;
-
   const HomePage({
     super.key,
-    required this.accessToken,
-    required this.baseUrl,
   });
 
   @override
@@ -28,10 +23,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> widgetOptions = <Widget>[
-      SearchAndPlaybackPage(
-        accessToken: widget.accessToken,
-        baseUrl: widget.baseUrl,
-      ),
+      SearchAndPlaybackPage(),
       const RecordingsPage(),
     ];
 

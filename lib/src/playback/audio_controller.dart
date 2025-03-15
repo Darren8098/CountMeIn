@@ -24,7 +24,6 @@ class AudioController {
 
   SoLoud? _soloud;
   bool _isInitialized = false;
-  String? _accessToken;
   String? _currentTrackId;
   bool _isPlaying = false;
   Duration _currentPosition = Duration.zero;
@@ -38,13 +37,11 @@ class AudioController {
   RecordingController get recordingController => _recordingController;
   bool get hasActiveDevice => _hasActiveDevice;
 
+  // TODO could we just do this in the constructor?
   Future<void> initialize() async {
     try {
       _soloud = SoLoud.instance;
       await _soloud!.init();
-      if (_accessToken != null) {
-        _spotifyClient.setAccessToken(_accessToken!);
-      }
       await _recordingService.initialize();
       _isInitialized = true;
       _log.info('Audio system initialized successfully');
@@ -52,12 +49,6 @@ class AudioController {
       _log.severe('Failed to initialize audio system', e);
       rethrow;
     }
-  }
-
-  // TODO lets move this to the spotify client
-  void setAccessToken(String token) {
-    _accessToken = token;
-    _spotifyClient.setAccessToken(token);
   }
 
   Future<void> startMusic(String trackId, {Duration? startAt}) async {
