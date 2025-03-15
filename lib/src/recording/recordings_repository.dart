@@ -5,7 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:count_me_in/src/recording/recording.dart';
 
-class RecordingService extends ChangeNotifier {
+class RecordingsRepository extends ChangeNotifier {
   static final Logger _log = Logger('RecordingService');
   static const String _metadataFileName = 'recordings_metadata.json';
   List<Recording> _recordings = [];
@@ -66,7 +66,7 @@ class RecordingService extends ChangeNotifier {
 
   Future<void> deleteRecording(String recordingId) async {
     final recording = _recordings.firstWhere((r) => r.id == recordingId);
-    
+
     // Delete the audio file
     final file = File(recording.filePath);
     if (await file.exists()) {

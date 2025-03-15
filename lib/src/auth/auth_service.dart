@@ -38,8 +38,6 @@ class AuthService {
       final uri = Uri.parse(result);
       final code = uri.queryParameters['code'];
 
-      print("AUTH RESPONSE URI: $uri");
-      print("AUTH RESPONSE CODE: $code");
       if (code == null) {
         return null;
       }

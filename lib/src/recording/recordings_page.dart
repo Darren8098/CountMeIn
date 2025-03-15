@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:count_me_in/src/recording/recording.dart';
-import 'package:count_me_in/src/recording/recording_service.dart';
+import 'package:count_me_in/src/recording/recordings_repository.dart';
 import 'package:intl/intl.dart';
 
 class RecordingsPage extends StatelessWidget {
@@ -9,10 +9,10 @@ class RecordingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<RecordingService>(
+    return Consumer<RecordingsRepository>(
       builder: (context, recordingService, child) {
         final recordings = recordingService.recordings;
-        
+
         if (recordings.isEmpty) {
           return const Center(
             child: Text(
@@ -59,8 +59,9 @@ class RecordingsPage extends StatelessWidget {
     );
   }
 
-  Future<void> _handleDeleteRecording(BuildContext context, Recording recording) async {
-    final recordingService = context.read<RecordingService>();
+  Future<void> _handleDeleteRecording(
+      BuildContext context, Recording recording) async {
+    final recordingService = context.read<RecordingsRepository>();
     await recordingService.deleteRecording(recording.id);
   }
 }

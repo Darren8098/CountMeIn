@@ -1,4 +1,3 @@
-import 'package:count_me_in/src/search/search_page.dart';
 import 'package:count_me_in/src/playback/audio_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
