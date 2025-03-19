@@ -1,9 +1,14 @@
 import 'dart:async';
 import 'package:count_me_in/src/playback/audio_controller.dart';
 import 'package:count_me_in/src/playback/device_status_widget.dart';
+import 'package:count_me_in/src/playback/start_recording_button_widget.dart';
 import 'package:count_me_in/src/recording/recording_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'bpm_control_widget.dart';
+import 'count_in_widget.dart';
+import 'playback_controls_widget.dart';
+import 'recording_overlay.dart';
 
 class RecordingPage extends StatefulWidget {
   final String trackName;
@@ -30,6 +35,7 @@ class _RecordingPageState extends State<RecordingPage> {
   Timer? _progressTimer;
   Duration _position = Duration.zero;
   late final RecordingController _recordingController;
+  bool _playbackEnded = false;
 
   @override
   void initState() {
@@ -41,6 +47,18 @@ class _RecordingPageState extends State<RecordingPage> {
         setState(() {
           _position = widget.audioController.currentPosition;
         });
+
+        // Check if the song has reached its end
+        if (_isPlaying &&
+            !_playbackEnded &&
+            _position >= widget.audioController.totalDuration) {
+          _playbackEnded = true; // Ensure we only run this once
+
+          // Stop the playback UI immediately
+          setState(() {
+            _isPlaying = false;
+          });
+        }
       }
     });
   }
@@ -49,210 +67,6 @@ class _RecordingPageState extends State<RecordingPage> {
   void dispose() {
     _progressTimer?.cancel();
     super.dispose();
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.trackName),
-      ),
-      body: Consumer<AudioController>(
-        builder: (context, audioController, child) {
-          // Show device status widget if no active device
-          if (!audioController.hasActiveDevice) {
-            return DeviceStatusWidget(
-              onDeviceReady: () {
-                if (!audioController.isPlaying) {
-                  audioController.startMusic(widget.trackId);
-                }
-              },
-            );
-          }
-
-          // Show main recording UI only when we have an active device
-          return Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    Text(
-                      widget.trackName,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Count-in Speed: ${_bpm.toInt()} BPM',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 10),
-                    Slider(
-                      value: _bpm,
-                      min: 40,
-                      max: 240,
-                      divisions: 200,
-                      label: _bpm.round().toString(),
-                      onChanged: _isPlaying || _isCounting
-                          ? null
-                          : (double value) {
-                              setState(() {
-                                _bpm = value;
-                              });
-                            },
-                    ),
-                    const SizedBox(height: 30),
-                    if (_isCounting)
-                      Column(
-                        children: [
-                          Text(
-                            '${_currentBeat == 0 ? "Ready" : _currentBeat}',
-                            style: Theme.of(context).textTheme.displayLarge,
-                          ),
-                          const SizedBox(height: 20),
-                          const CircularProgressIndicator(),
-                        ],
-                      ),
-                    if (_isPlaying)
-                      Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(_formatDuration(_position)),
-                              Expanded(
-                                child: widget.audioController.totalDuration.inSeconds >
-                                        0
-                                    ? Slider(
-                                        value: _position.inSeconds.toDouble(),
-                                        min: 0,
-                                        max: widget.audioController
-                                            .totalDuration.inSeconds
-                                            .toDouble(),
-                                        onChanged: null,
-                                      )
-                                    : const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                              ),
-                              Text(_formatDuration(
-                                  widget.audioController.totalDuration)),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  widget.audioController.isPlaying
-                                      ? Icons.pause_circle_filled
-                                      : Icons.play_circle_filled,
-                                  size: 48,
-                                ),
-                                onPressed: () {
-                                  if (widget.audioController.isPlaying) {
-                                    widget.audioController.pauseMusic();
-                                  } else {
-                                    widget.audioController.resumeMusic();
-                                  }
-                                },
-                              ),
-                              const SizedBox(width: 20),
-                              IconButton(
-                                icon: Icon(
-                                  _recordingController.isRecording
-                                      ? Icons.stop_circle
-                                      : Icons.fiber_manual_record,
-                                  size: 48,
-                                  color: _recordingController.isRecording
-                                      ? Colors.red
-                                      : Colors.grey,
-                                ),
-                                onPressed: () async {
-                                  if (_recordingController.isRecording) {
-                                    try {
-                                      final saved = await widget.audioController.stopRecording(widget.trackId);
-                                      if (saved) {
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Recording saved successfully!'),
-                                              backgroundColor: Colors.green,
-                                              duration: Duration(seconds: 2),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    } catch (e) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('Failed to save recording: $e'),
-                                            backgroundColor: Colors.red,
-                                            duration: const Duration(seconds: 3),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  } else {
-                                    await widget.audioController.startRecording(widget.trackId);
-                                  }
-                                  setState(() {}); // Refresh UI
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    if (!_isPlaying && !_isCounting)
-                      ElevatedButton.icon(
-                        onPressed: _playCountIn,
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('Start Recording'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (_recordingController.isRecording)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    color: Colors.red.withOpacity(0.8),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.fiber_manual_record, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(
-                          'Recording',
-                          style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          );
-        },
-      ),
-    );
   }
 
   Future<void> _playCountIn() async {
@@ -266,20 +80,22 @@ class _RecordingPageState extends State<RecordingPage> {
     try {
       final beepDelay = Duration(milliseconds: (60000 / _bpm).round());
 
+      await widget.audioController.startRecording(widget.trackId);
+
       // Play 4 count-in beats
       for (int i = 1; i <= _totalBeats; i++) {
+        await widget.audioController
+            .playSound('assets/audio/short-beep-tone.mp3');
         setState(() {
           _currentBeat = i;
         });
-        await widget.audioController
-            .playSound('assets/audio/short-beep-tone.mp3');
+
         await Future.delayed(beepDelay);
       }
 
       // Start the track on the next beat
       await Future.delayed(beepDelay);
       await widget.audioController.startMusic(widget.trackId);
-      await widget.audioController.startRecording(widget.trackId);
 
       setState(() {
         _isCounting = false;
@@ -294,5 +110,73 @@ class _RecordingPageState extends State<RecordingPage> {
         _currentBeat = 0;
       });
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.trackName),
+      ),
+      body: Consumer<AudioController>(
+        builder: (context, audioController, child) {
+          if (!audioController.hasActiveDevice) {
+            return DeviceStatusWidget(
+              onDeviceReady: () {},
+            );
+          }
+
+          return Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    BpmControlWidget(
+                      trackName: widget.trackName,
+                      bpm: _bpm,
+                      onBpmChanged: (value) {
+                        setState(() {
+                          _bpm = value;
+                        });
+                      },
+                      controlsEnabled: !_isPlaying && !_isCounting,
+                    ),
+                    const SizedBox(height: 30),
+                    if (_isCounting)
+                      CountInWidget(
+                        currentBeat: _currentBeat,
+                        totalBeats: _totalBeats,
+                      ),
+                    if (_isPlaying)
+                      PlaybackControlsWidget(
+                        audioController: widget.audioController,
+                        currentPosition: _position,
+                        totalDuration: widget.audioController.totalDuration,
+                        isRecording: _recordingController.isRecording,
+                        isPlaying: widget.audioController.isPlaying,
+                        onPlayPause: () {
+                          if (widget.audioController.isPlaying) {
+                            widget.audioController.pauseMusic();
+                          } else {
+                            widget.audioController.resumeMusic();
+                          }
+                          setState(() {});
+                        },
+                        trackId: widget.trackId,
+                      ),
+                    if (!_isPlaying && !_isCounting)
+                      StartRecordingButton(
+                        onPressed: _playCountIn,
+                      ),
+                  ],
+                ),
+              ),
+              if (_recordingController.isRecording) const RecordingOverlay(),
+            ],
+          );
+        },
+      ),
+    );
   }
 }
