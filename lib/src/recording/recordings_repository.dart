@@ -67,13 +67,11 @@ class RecordingsRepository extends ChangeNotifier {
   Future<void> deleteRecording(String recordingId) async {
     final recording = _recordings.firstWhere((r) => r.id == recordingId);
 
-    // Delete the audio file
     final file = File(recording.filePath);
     if (await file.exists()) {
       await file.delete();
     }
 
-    // Remove from list and save metadata
     _recordings.removeWhere((r) => r.id == recordingId);
     await _saveMetadata();
     _log.info('Deleted recording: $recordingId');

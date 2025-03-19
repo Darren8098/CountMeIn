@@ -23,7 +23,6 @@ class _LoginPageState extends State<LoginPage> {
     final success = await spotifyClient.authenticate();
 
     if (success) {
-      // TODO this isn't needed here
       final audioController =
           Provider.of<AudioController>(context, listen: false);
       await audioController.initialize();
