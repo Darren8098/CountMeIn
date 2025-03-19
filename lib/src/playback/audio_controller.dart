@@ -37,7 +37,6 @@ class AudioController {
   RecordingController get recordingController => _recordingController;
   bool get hasActiveDevice => _hasActiveDevice;
 
-  // TODO could we just do this in the constructor?
   Future<void> initialize() async {
     try {
       _soloud = SoLoud.instance;
