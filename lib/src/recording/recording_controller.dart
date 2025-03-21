@@ -34,10 +34,10 @@ class RecordingController {
 
       // Generate unique filename using timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _currentRecordingPath = '${recordingsDir.path}/$trackId-$timestamp.m4a';
+      _currentRecordingPath = '${recordingsDir.path}/$trackId-$timestamp.flac';
 
       await _audioRecorder.start(
-        RecordConfig(),
+        RecordConfig(encoder: AudioEncoder.flac),
         path: _currentRecordingPath!,
       );
 
