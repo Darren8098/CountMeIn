@@ -1,12 +1,13 @@
 import 'dart:developer' as dev;
 
 import 'package:count_me_in/src/auth/login_page.dart';
-import 'package:count_me_in/src/playback/audio_controller.dart';
-import 'package:count_me_in/src/playback/spotify_client.dart';
+import 'package:count_me_in/src/playback/services/audio_controller.dart';
+import 'package:count_me_in/src/playback/services/spotify_client.dart';
+import 'package:count_me_in/src/recordings/services/recording_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
-import 'package:count_me_in/src/recording/recordings_repository.dart';
+import 'package:count_me_in/src/recordings/services/recordings_repository.dart';
 
 void main() async {
   const String spotifyApiBaseUrl = 'https://api.spotify.com/v1';
@@ -41,13 +42,17 @@ void main() async {
       providers: [
         ChangeNotifierProvider<RecordingsRepository>.value(
             value: recordingRepository),
+        ProxyProvider<RecordingsRepository, RecordingController>(
+          update: (context, spotifyClient, __) =>
+              RecordingController(recordingRepository: recordingRepository),
+          dispose: (_, controller) => controller.dispose(),
+        ),
         Provider<SpotifyClient>(
             create: (_) =>
                 SpotifyClient(spotifyApiBaseUrl, spotifyAuthBaseUrl)),
         ProxyProvider<SpotifyClient, AudioController>(
-          update: (context, spotifyClient, __) => AudioController(
-              recordingService: context.read<RecordingsRepository>(),
-              spotifyClient: spotifyClient),
+          update: (context, spotifyClient, __) =>
+              AudioController(spotifyClient: spotifyClient),
           dispose: (_, controller) => controller.dispose(),
         ),
       ],

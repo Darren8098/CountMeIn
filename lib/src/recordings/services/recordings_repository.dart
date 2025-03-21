@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:count_me_in/src/recording/recording.dart';
+import 'package:count_me_in/src/recordings/recording.dart';
 
 class RecordingsRepository extends ChangeNotifier {
   static final Logger _log = Logger('RecordingService');
