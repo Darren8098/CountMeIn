@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:count_me_in/src/playback/search_and_playback_page.dart';
-import 'package:count_me_in/src/recording/recordings_page.dart';
+import 'package:count_me_in/src/recordings/recordings_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({

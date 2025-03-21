@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:count_me_in/src/playback/audio_controller.dart';
+import 'package:count_me_in/src/playback/services/audio_controller.dart';
 
 class DeviceStatusWidget extends StatefulWidget {
   final VoidCallback? onDeviceReady;
@@ -30,7 +30,7 @@ class _DeviceStatusWidgetState extends State<DeviceStatusWidget> {
     try {
       final audioController = context.read<AudioController>();
       final hasDevice = await audioController.checkForActiveDevice();
-      
+
       if (hasDevice && widget.onDeviceReady != null) {
         widget.onDeviceReady!();
       }
@@ -76,10 +76,11 @@ class _DeviceStatusWidgetState extends State<DeviceStatusWidget> {
                       await _checkDeviceStatus();
                     }
                   } catch (e) {
-                    if (mounted) {
+                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Failed to open Spotify app. Please open it manually.'),
+                          content: Text(
+                              'Failed to open Spotify app. Please open it manually.'),
                         ),
                       );
                     }

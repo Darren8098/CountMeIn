@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:count_me_in/src/playback/audio_controller.dart';
+import 'package:count_me_in/src/playback/services/audio_controller.dart';
 
 class PlaybackControlsWidget extends StatelessWidget {
   final AudioController audioController;

@@ -1,5 +1,5 @@
-import 'package:count_me_in/src/playback/audio_controller.dart';
-import 'package:count_me_in/src/playback/spotify_client.dart';
+import 'package:count_me_in/src/playback/services/audio_controller.dart';
+import 'package:count_me_in/src/playback/services/spotify_client.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:count_me_in/src/navigation/home_page.dart';
@@ -22,12 +22,11 @@ class _LoginPageState extends State<LoginPage> {
     final spotifyClient = Provider.of<SpotifyClient>(context, listen: false);
     final success = await spotifyClient.authenticate();
 
-    if (success) {
+    if (success && mounted) {
       final audioController =
           Provider.of<AudioController>(context, listen: false);
       await audioController.initialize();
 
-      // Navigate to home page
       if (mounted) {
         Navigator.pushReplacement(
           context,

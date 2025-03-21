@@ -1,26 +1,27 @@
 import 'dart:async';
-import 'package:count_me_in/src/playback/audio_controller.dart';
-import 'package:count_me_in/src/playback/device_status_widget.dart';
-import 'package:count_me_in/src/playback/start_recording_button_widget.dart';
-import 'package:count_me_in/src/recording/recording_controller.dart';
+import 'package:count_me_in/src/playback/services/audio_controller.dart';
+import 'package:count_me_in/src/playback/widgets/device_status_widget.dart';
+import 'package:count_me_in/src/playback/widgets/start_recording_button_widget.dart';
+import 'package:count_me_in/src/recordings/services/recording_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'bpm_control_widget.dart';
-import 'count_in_widget.dart';
-import 'playback_controls_widget.dart';
-import 'recording_overlay.dart';
+import 'widgets/bpm_control_widget.dart';
+import 'widgets/count_in_widget.dart';
+import 'widgets/playback_controls_widget.dart';
+import 'widgets/recording_overlay.dart';
 
 class RecordingPage extends StatefulWidget {
   final String trackName;
   final String trackId;
   final AudioController audioController;
+  final RecordingController recordingController;
 
-  const RecordingPage({
-    super.key,
-    required this.trackName,
-    required this.trackId,
-    required this.audioController,
-  });
+  const RecordingPage(
+      {super.key,
+      required this.trackName,
+      required this.trackId,
+      required this.audioController,
+      required this.recordingController});
 
   @override
   State<RecordingPage> createState() => _RecordingPageState();
@@ -34,13 +35,11 @@ class _RecordingPageState extends State<RecordingPage> {
   static const int _totalBeats = 4;
   Timer? _progressTimer;
   Duration _position = Duration.zero;
-  late final RecordingController _recordingController;
   bool _playbackEnded = false;
 
   @override
   void initState() {
     super.initState();
-    _recordingController = widget.audioController.recordingController;
     _position = widget.audioController.currentPosition;
     _progressTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       if (mounted) {
@@ -80,7 +79,7 @@ class _RecordingPageState extends State<RecordingPage> {
     try {
       final beepDelay = Duration(milliseconds: (60000 / _bpm).round());
 
-      await widget.audioController.startRecording(widget.trackId);
+      await widget.recordingController.startRecording(widget.trackId);
 
       // Play 4 count-in beats
       for (int i = 1; i <= _totalBeats; i++) {
@@ -102,13 +101,24 @@ class _RecordingPageState extends State<RecordingPage> {
         _isPlaying = true;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to play audio: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to play audio: $e')),
+        );
+      }
       setState(() {
         _isCounting = false;
         _currentBeat = 0;
       });
+    }
+  }
+
+  Future<void> completeRecording() async {
+    widget.audioController.pauseMusic();
+    final path = await widget.recordingController.stopRecording();
+    if (path != null) {
+      widget.recordingController
+          .saveRecording(path, widget.trackId, widget.trackName);
     }
   }
 
@@ -153,15 +163,14 @@ class _RecordingPageState extends State<RecordingPage> {
                         audioController: widget.audioController,
                         currentPosition: _position,
                         totalDuration: widget.audioController.totalDuration,
-                        isRecording: _recordingController.isRecording,
+                        isRecording: widget.recordingController.isRecording,
                         isPlaying: widget.audioController.isPlaying,
-                        onPlayPause: () {
+                        onPlayPause: () async {
                           if (widget.audioController.isPlaying) {
-                            widget.audioController.pauseMusic();
+                            completeRecording();
                           } else {
                             widget.audioController.resumeMusic();
                           }
-                          setState(() {});
                         },
                         trackId: widget.trackId,
                       ),
@@ -172,7 +181,8 @@ class _RecordingPageState extends State<RecordingPage> {
                   ],
                 ),
               ),
-              if (_recordingController.isRecording) const RecordingOverlay(),
+              if (widget.recordingController.isRecording)
+                const RecordingOverlay(),
             ],
           );
         },

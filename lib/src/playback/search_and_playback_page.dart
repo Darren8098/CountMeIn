@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'package:count_me_in/src/playback/spotify_client.dart';
+import 'package:count_me_in/src/playback/services/spotify_client.dart';
+import 'package:count_me_in/src/recordings/services/recording_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:count_me_in/src/playback/audio_controller.dart';
+import 'package:count_me_in/src/playback/services/audio_controller.dart';
 import 'package:count_me_in/src/playback/recording_page.dart';
 
 class SearchAndPlaybackPage extends StatefulWidget {
@@ -64,9 +65,11 @@ class _SearchAndPlaybackPageState extends State<SearchAndPlaybackPage> {
         _searchResults = results;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Search failed: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Search failed: $e')),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -157,6 +160,7 @@ class _SearchAndPlaybackPageState extends State<SearchAndPlaybackPage> {
                   trackId: _selectedTrackId!,
                   trackName: _selectedTrackName!,
                   audioController: context.read<AudioController>(),
+                  recordingController: context.read<RecordingController>(),
                 ),
               ),
             if (_searchResults.isEmpty && _selectedTrackId == null)

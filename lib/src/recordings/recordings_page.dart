@@ -1,8 +1,8 @@
-import 'package:count_me_in/src/playback/audio_controller.dart';
+import 'package:count_me_in/src/playback/services/audio_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:count_me_in/src/recording/recording.dart';
-import 'package:count_me_in/src/recording/recordings_repository.dart';
+import 'package:count_me_in/src/recordings/recording.dart';
+import 'package:count_me_in/src/recordings/services/recordings_repository.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
 
@@ -43,7 +43,8 @@ class RecordingsPage extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () => _handleDeleteRecording(context, recording),
+                    onPressed: () =>
+                        recordingService.deleteRecording(recording.id),
                   ),
                 ],
               ),
@@ -57,33 +58,27 @@ class RecordingsPage extends StatelessWidget {
   Future<void> _handlePlayRecording(
       BuildContext context, Recording recording) async {
     try {
-      final audioController = context.read<AudioController>();
-
-      // Check if the audio file exists
       final file = File(recording.filePath);
-      if (!await file.exists()) {
+      if (!await file.exists() && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Recording file not found')),
         );
         return;
       }
 
-      // Use our new method to play the local recording file
+      final audioController = context.read<AudioController>();
       await audioController.playLocalFile(recording.filePath);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Playing ${recording.trackName}')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Playing ${recording.trackName}')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to play recording: ${e.toString()}')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Failed to play recording: ${e.toString()}')));
+      }
     }
-  }
-
-  Future<void> _handleDeleteRecording(
-      BuildContext context, Recording recording) async {
-    final recordingService = context.read<RecordingsRepository>();
-    await recordingService.deleteRecording(recording.id);
   }
 }

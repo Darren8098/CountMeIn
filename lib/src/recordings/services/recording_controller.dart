@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:count_me_in/src/recordings/services/recordings_repository.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 class RecordingController {
+  final RecordingsRepository _recordingRepository;
+
   static final Logger _log = Logger('RecordingController');
   final _audioRecorder = AudioRecorder();
   String? _currentRecordingPath;
@@ -12,6 +15,9 @@ class RecordingController {
 
   bool get isRecording => _isRecording;
   String? get currentRecordingPath => _currentRecordingPath;
+
+  RecordingController({required RecordingsRepository recordingRepository})
+      : _recordingRepository = recordingRepository;
 
   Future<void> startRecording(String trackId) async {
     if (_isRecording) {
@@ -34,7 +40,7 @@ class RecordingController {
 
       // Generate unique filename using timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _currentRecordingPath = '${recordingsDir.path}/$trackId-$timestamp.flac';
+      _currentRecordingPath = '${recordingsDir.path}/$trackId-$timestamp.mp3';
 
       await _audioRecorder.start(
         RecordConfig(encoder: AudioEncoder.flac),
@@ -68,6 +74,15 @@ class RecordingController {
       _log.severe('Failed to stop recording', e);
       rethrow;
     }
+  }
+
+  Future<void> saveRecording(
+      String recordingPath, String trackId, String trackName) {
+    return _recordingRepository.addRecording(
+      filePath: recordingPath,
+      trackId: trackId,
+      trackName: trackName,
+    );
   }
 
   Future<void> dispose() async {
