@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:count_me_in/src/playback/services/spotify_client.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:logging/logging.dart';
@@ -11,8 +12,9 @@ class AudioController {
   final SpotifyClient _spotifyClient;
 
   AudioController({required SpotifyClient spotifyClient})
-      : _spotifyClient = spotifyClient;
+    : _spotifyClient = spotifyClient;
 
+  late final PlayerController _playerController;
   SoLoud? _soloud;
   bool _isInitialized = false;
   bool _isPlaying = false;
@@ -27,6 +29,7 @@ class AudioController {
 
   Future<void> initialize() async {
     try {
+      _playerController = PlayerController();
       _soloud = SoLoud.instance;
       await _soloud!.init();
 
@@ -127,7 +130,8 @@ class AudioController {
 
       _isPlaying = playerState['is_playing'] ?? _isPlaying;
       _currentPosition = Duration(
-          milliseconds: playerState['progress_ms'] ?? _currentPosition);
+        milliseconds: playerState['progress_ms'] ?? _currentPosition,
+      );
     } catch (e) {
       _log.warning('Failed to update playback state', e);
     }
@@ -154,8 +158,13 @@ class AudioController {
     }
 
     try {
-      final source = await _soloud!.loadFile(filePath);
-      await _soloud!.play(source);
+      await _playerController.preparePlayer(
+        path: filePath,
+        shouldExtractWaveform: true,
+      );
+      _playerController.startPlayer();
+      // final source = await _soloud!.loadFile(filePath);
+      // await _soloud!.play(source);
       _log.fine('Playing local file: $filePath');
     } catch (e) {
       _log.warning('Failed to play local file: $filePath', e);
@@ -164,9 +173,9 @@ class AudioController {
   }
 
   Future<bool> checkForActiveDevice() async {
-    if (!_isInitialized) {
-      throw StateError('AudioController not initialized');
-    }
+    // if (!_isInitialized) {
+    //   return;
+    // }
 
     try {
       final devices = await _spotifyClient.getAvailableDevices();
@@ -188,6 +197,7 @@ class AudioController {
 
   Future<void> dispose() async {
     _stopPositionTimer();
+    _playerController.dispose();
     if (_soloud != null) {
       _soloud!.deinit();
       _soloud = null;

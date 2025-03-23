@@ -41,18 +41,21 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<RecordingsRepository>.value(
-            value: recordingRepository),
+          value: recordingRepository,
+        ),
         ProxyProvider<RecordingsRepository, RecordingController>(
-          update: (context, spotifyClient, __) =>
-              RecordingController(recordingRepository: recordingRepository),
+          update:
+              (context, spotifyClient, __) =>
+                  RecordingController(recordingRepository: recordingRepository),
           dispose: (_, controller) => controller.dispose(),
         ),
         Provider<SpotifyClient>(
-            create: (_) =>
-                SpotifyClient(spotifyApiBaseUrl, spotifyAuthBaseUrl)),
+          create: (_) => SpotifyClient(spotifyApiBaseUrl, spotifyAuthBaseUrl),
+        ),
         ProxyProvider<SpotifyClient, AudioController>(
-          update: (context, spotifyClient, __) =>
-              AudioController(spotifyClient: spotifyClient),
+          update:
+              (context, spotifyClient, __) =>
+                  AudioController(spotifyClient: spotifyClient),
           dispose: (_, controller) => controller.dispose(),
         ),
       ],

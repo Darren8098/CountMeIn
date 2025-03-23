@@ -1,8 +1,11 @@
+import 'package:count_me_in/src/recordings/services/recording_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:count_me_in/src/playback/services/audio_controller.dart';
+import 'package:audio_waveforms/audio_waveforms.dart';
 
 class PlaybackControlsWidget extends StatelessWidget {
   final AudioController audioController;
+  final RecordingController recordingController;
   final Duration currentPosition;
   final Duration totalDuration;
   final bool isRecording;
@@ -13,6 +16,7 @@ class PlaybackControlsWidget extends StatelessWidget {
   const PlaybackControlsWidget({
     super.key,
     required this.audioController,
+    required this.recordingController,
     required this.currentPosition,
     required this.totalDuration,
     required this.isRecording,
@@ -32,20 +36,25 @@ class PlaybackControlsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Progress slider row
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(_formatDuration(currentPosition)),
             Expanded(
-              child: totalDuration.inSeconds > 0
-                  ? Slider(
-                      value: currentPosition.inSeconds.toDouble(),
-                      min: 0,
-                      max: totalDuration.inSeconds.toDouble(),
-                      onChanged: null,
-                    )
-                  : const Center(child: CircularProgressIndicator()),
+              child:
+                  totalDuration.inSeconds > 0
+                      ? AudioWaveforms(
+                        recorderController:
+                            recordingController.recorderController,
+                        size: Size(MediaQuery.of(context).size.width, 50),
+                        enableGesture: true,
+                        waveStyle: WaveStyle(
+                          // showTop: true,
+                          // showBottom: true,
+                          // showDurationLabel: true,
+                          extendWaveform: true,
+                        ),
+                      )
+                      : const Center(child: CircularProgressIndicator()),
             ),
             Text(_formatDuration(totalDuration)),
           ],

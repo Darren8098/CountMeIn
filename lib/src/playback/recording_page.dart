@@ -161,6 +161,7 @@ class _RecordingPageState extends State<RecordingPage> {
                     if (_isPlaying)
                       PlaybackControlsWidget(
                         audioController: widget.audioController,
+                        recordingController: widget.recordingController,
                         currentPosition: _position,
                         totalDuration: widget.audioController.totalDuration,
                         isRecording: widget.recordingController.isRecording,

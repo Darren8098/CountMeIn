@@ -3,51 +3,43 @@ import 'dart:io';
 import 'package:count_me_in/src/recordings/services/recordings_repository.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
+import 'package:audio_waveforms/audio_waveforms.dart';
 
 class RecordingController {
   final RecordingsRepository _recordingRepository;
 
   static final Logger _log = Logger('RecordingController');
-  final _audioRecorder = AudioRecorder();
+  final RecorderController _recorderController = RecorderController();
   String? _currentRecordingPath;
-  bool _isRecording = false;
 
-  bool get isRecording => _isRecording;
+  bool get isRecording => _recorderController.isRecording;
   String? get currentRecordingPath => _currentRecordingPath;
+  RecorderController get recorderController => _recorderController;
 
   RecordingController({required RecordingsRepository recordingRepository})
-      : _recordingRepository = recordingRepository;
+    : _recordingRepository = recordingRepository;
 
   Future<void> startRecording(String trackId) async {
-    if (_isRecording) {
+    if (isRecording) {
       _log.warning('Already recording');
       return;
     }
 
     try {
-      // Check permissions
-      if (!await _audioRecorder.hasPermission()) {
+      if (!await _recorderController.checkPermission()) {
         throw StateError('Microphone permission not granted');
       }
 
-      // Create recordings directory if it doesn't exist
       final appDir = await getApplicationDocumentsDirectory();
       final recordingsDir = Directory('${appDir.path}/recordings');
       if (!await recordingsDir.exists()) {
         await recordingsDir.create(recursive: true);
       }
 
-      // Generate unique filename using timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _currentRecordingPath = '${recordingsDir.path}/$trackId-$timestamp.mp3';
+      _currentRecordingPath = '${recordingsDir.path}/$trackId-$timestamp.m4a';
 
-      await _audioRecorder.start(
-        RecordConfig(encoder: AudioEncoder.flac),
-        path: _currentRecordingPath!,
-      );
-
-      _isRecording = true;
+      await _recorderController.record(path: _currentRecordingPath);
       _log.info('Started recording to $_currentRecordingPath');
     } catch (e) {
       _log.severe('Failed to start recording', e);
@@ -56,14 +48,13 @@ class RecordingController {
   }
 
   Future<String?> stopRecording() async {
-    if (!_isRecording) {
+    if (!isRecording) {
       _log.warning('Not currently recording');
       return null;
     }
 
     try {
-      await _audioRecorder.stop();
-      _isRecording = false;
+      await _recorderController.stop();
 
       final recordingPath = _currentRecordingPath;
       _currentRecordingPath = null;
@@ -77,7 +68,10 @@ class RecordingController {
   }
 
   Future<void> saveRecording(
-      String recordingPath, String trackId, String trackName) {
+    String recordingPath,
+    String trackId,
+    String trackName,
+  ) {
     return _recordingRepository.addRecording(
       filePath: recordingPath,
       trackId: trackId,
@@ -86,8 +80,9 @@ class RecordingController {
   }
 
   Future<void> dispose() async {
-    if (_isRecording) {
+    if (isRecording) {
       await stopRecording();
     }
+    _recorderController.dispose();
   }
 }
